@@ -3,8 +3,10 @@ import {
   CardElement,
   injectStripe,
   Elements,
-  StripeProvider
+  StripeProvider,
 } from "react-stripe-elements";
+//import { Elements, CardElement } from "@stripe/react-stripe-js";
+//import { loadStripe } from "@stripe/stripe-js";
 import {
   Button,
   Container,
@@ -18,7 +20,7 @@ import {
   Loader,
   Message,
   Segment,
-  Select
+  Select,
 } from "semantic-ui-react";
 import { Link, withRouter } from "react-router-dom";
 import { authAxios } from "../utils";
@@ -26,10 +28,10 @@ import {
   checkoutURL,
   orderSummaryURL,
   addCouponURL,
-  addressListURL
+  addressListURL,
 } from "../constants";
 
-const OrderPreview = props => {
+const OrderPreview = (props) => {
   const { data } = props;
   return (
     <React.Fragment>
@@ -79,16 +81,16 @@ const OrderPreview = props => {
 
 class CouponForm extends Component {
   state = {
-    code: ""
+    code: "",
   };
 
-  handleChange = e => {
+  handleChange = (e) => {
     this.setState({
-      code: e.target.value
+      code: e.target.value,
     });
   };
 
-  handleSubmit = e => {
+  handleSubmit = (e) => {
     const { code } = this.state;
     this.props.handleAddCoupon(e, code);
     this.setState({ code: "" });
@@ -123,7 +125,7 @@ class CheckoutForm extends Component {
     shippingAddresses: [],
     billingAddresses: [],
     selectedBillingAddress: "",
-    selectedShippingAddress: ""
+    selectedShippingAddress: "",
   };
 
   componentDidMount() {
@@ -132,8 +134,8 @@ class CheckoutForm extends Component {
     this.handleFetchShippingAddresses();
   }
 
-  handleGetDefaultAddress = addresses => {
-    const filteredAddresses = addresses.filter(el => el.default === true);
+  handleGetDefaultAddress = (addresses) => {
+    const filteredAddresses = addresses.filter((el) => el.default === true);
     if (filteredAddresses.length > 0) {
       return filteredAddresses[0].id;
     }
@@ -144,20 +146,20 @@ class CheckoutForm extends Component {
     this.setState({ loading: true });
     authAxios
       .get(addressListURL("B"))
-      .then(res => {
+      .then((res) => {
         this.setState({
-          billingAddresses: res.data.map(a => {
+          billingAddresses: res.data.map((a) => {
             return {
               key: a.id,
               text: `${a.street_address}, ${a.apartment_address}, ${a.country}`,
-              value: a.id
+              value: a.id,
             };
           }),
           selectedBillingAddress: this.handleGetDefaultAddress(res.data),
-          loading: false
+          loading: false,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
@@ -166,20 +168,20 @@ class CheckoutForm extends Component {
     this.setState({ loading: true });
     authAxios
       .get(addressListURL("S"))
-      .then(res => {
+      .then((res) => {
         this.setState({
-          shippingAddresses: res.data.map(a => {
+          shippingAddresses: res.data.map((a) => {
             return {
               key: a.id,
               text: `${a.street_address}, ${a.apartment_address}, ${a.country}`,
-              value: a.id
+              value: a.id,
             };
           }),
           selectedShippingAddress: this.handleGetDefaultAddress(res.data),
-          loading: false
+          loading: false,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
@@ -188,10 +190,10 @@ class CheckoutForm extends Component {
     this.setState({ loading: true });
     authAxios
       .get(orderSummaryURL)
-      .then(res => {
+      .then((res) => {
         this.setState({ data: res.data, loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.response.status === 404) {
           this.props.history.push("/products");
         } else {
@@ -205,11 +207,11 @@ class CheckoutForm extends Component {
     this.setState({ loading: true });
     authAxios
       .post(addCouponURL, { code })
-      .then(res => {
+      .then((res) => {
         this.setState({ loading: false });
         this.handleFetchOrder();
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
@@ -218,29 +220,29 @@ class CheckoutForm extends Component {
     this.setState({ [name]: value });
   };
 
-  submit = ev => {
+  submit = (ev) => {
     ev.preventDefault();
     this.setState({ loading: true });
     if (this.props.stripe) {
-      this.props.stripe.createToken().then(result => {
+      this.props.stripe.createToken().then((result) => {
         if (result.error) {
           this.setState({ error: result.error.message, loading: false });
         } else {
           this.setState({ error: null });
           const {
             selectedBillingAddress,
-            selectedShippingAddress
+            selectedShippingAddress,
           } = this.state;
           authAxios
             .post(checkoutURL, {
               stripeToken: result.token.id,
               selectedBillingAddress,
-              selectedShippingAddress
+              selectedShippingAddress,
             })
-            .then(res => {
+            .then((res) => {
               this.setState({ loading: false, success: true });
             })
-            .catch(err => {
+            .catch((err) => {
               this.setState({ loading: false, error: err });
             });
         }
@@ -259,7 +261,7 @@ class CheckoutForm extends Component {
       billingAddresses,
       shippingAddresses,
       selectedBillingAddress,
-      selectedShippingAddress
+      selectedShippingAddress,
     } = this.state;
 
     return (
@@ -349,10 +351,12 @@ class CheckoutForm extends Component {
 }
 
 const InjectedForm = withRouter(injectStripe(CheckoutForm));
-
+// const stripePromise = loadStripe(
+//   "pk_test_51GunXnB9GEXVUU97tJYpFoKuErZZd3iDvY2zsY5bUNzEZHghZ3Dk52o3lLJJWpl34jXTjjFHs6VgU6soNtdrGZVo00h16scNWT"
+// );
 const WrappedForm = () => (
   <Container text>
-    <StripeProvider apiKey="">
+    <StripeProvider apiKey="pk_test_51GunXnB9GEXVUU97tJYpFoKuErZZd3iDvY2zsY5bUNzEZHghZ3Dk52o3lLJJWpl34jXTjjFHs6VgU6soNtdrGZVo00h16scNWT">
       <div>
         <h1>Complete your order</h1>
         <Elements>

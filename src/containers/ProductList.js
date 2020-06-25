@@ -2,6 +2,8 @@ import React from "react";
 import { connect } from "react-redux";
 import axios from "axios";
 import {
+  Button,
+  Icon,
   Container,
   Dimmer,
   Image,
@@ -9,7 +11,7 @@ import {
   Label,
   Loader,
   Message,
-  Segment
+  Segment,
 } from "semantic-ui-react";
 import { productListURL, addToCartURL } from "../constants";
 import { fetchCart } from "../store/actions/cart";
@@ -19,30 +21,30 @@ class ProductList extends React.Component {
   state = {
     loading: false,
     error: null,
-    data: []
+    data: [],
   };
 
   componentDidMount() {
     this.setState({ loading: true });
     axios
       .get(productListURL)
-      .then(res => {
+      .then((res) => {
         this.setState({ data: res.data, loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   }
 
-  handleAddToCart = slug => {
+  handleAddToCart = (slug) => {
     this.setState({ loading: true });
     authAxios
       .post(addToCartURL, { slug })
-      .then(res => {
+      .then((res) => {
         this.props.refreshCart();
         this.setState({ loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
@@ -68,7 +70,7 @@ class ProductList extends React.Component {
           </Segment>
         )}
         <Item.Group divided>
-          {data.map(item => {
+          {data.map((item) => {
             return (
               <Item key={item.id}>
                 <Item.Image src={item.image} />
@@ -86,7 +88,7 @@ class ProductList extends React.Component {
                   </Item.Meta>
                   <Item.Description>{item.description}</Item.Description>
                   <Item.Extra>
-                    {/* <Button
+                    <Button
                       primary
                       floated="right"
                       icon
@@ -95,7 +97,7 @@ class ProductList extends React.Component {
                     >
                       Add to cart
                       <Icon name="cart plus" />
-                    </Button> */}
+                    </Button>
                     {item.discount_price && (
                       <Label
                         color={
@@ -120,13 +122,10 @@ class ProductList extends React.Component {
   }
 }
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    refreshCart: () => dispatch(fetchCart())
+    refreshCart: () => dispatch(fetchCart()),
   };
 };
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(ProductList);
+export default connect(null, mapDispatchToProps)(ProductList);

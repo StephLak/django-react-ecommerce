@@ -18,7 +18,7 @@ import {
   Message,
   Segment,
   Select,
-  Divider
+  Divider,
 } from "semantic-ui-react";
 import { productDetailURL, addToCartURL } from "../constants";
 import { fetchCart } from "../store/actions/cart";
@@ -30,7 +30,7 @@ class ProductDetail extends React.Component {
     error: null,
     formVisible: false,
     data: [],
-    formData: {}
+    formData: {},
   };
 
   componentDidMount() {
@@ -40,43 +40,45 @@ class ProductDetail extends React.Component {
   handleToggleForm = () => {
     const { formVisible } = this.state;
     this.setState({
-      formVisible: !formVisible
+      formVisible: !formVisible,
     });
   };
 
   handleFetchItem = () => {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
     this.setState({ loading: true });
     axios
       .get(productDetailURL(params.productID))
-      .then(res => {
+      .then((res) => {
+        console.log(res.data);
         this.setState({ data: res.data, loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
 
-  handleFormatData = formData => {
+  handleFormatData = (formData) => {
     // convert {colour: 1, size: 2} to [1,2] - they're all variations
-    return Object.keys(formData).map(key => {
+    return Object.keys(formData).map((key) => {
       return formData[key];
     });
   };
 
-  handleAddToCart = slug => {
+  handleAddToCart = (slug) => {
     this.setState({ loading: true });
     const { formData } = this.state;
     const variations = this.handleFormatData(formData);
     authAxios
       .post(addToCartURL, { slug, variations })
-      .then(res => {
+      .then((res) => {
+        console.log(res.data);
         this.props.refreshCart();
         this.setState({ loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
@@ -85,7 +87,7 @@ class ProductDetail extends React.Component {
     const { formData } = this.state;
     const updatedFormData = {
       ...formData,
-      [name]: value
+      [name]: value,
     };
     this.setState({ formData: updatedFormData });
   };
@@ -156,7 +158,7 @@ class ProductDetail extends React.Component {
                 <React.Fragment>
                   <Divider />
                   <Form onSubmit={() => this.handleAddToCart(item.slug)}>
-                    {data.variations.map(v => {
+                    {data.variations.map((v) => {
                       const name = v.name.toLowerCase();
                       return (
                         <Form.Field key={v.id}>
@@ -166,11 +168,11 @@ class ProductDetail extends React.Component {
                             placeholder={`Select a ${name}`}
                             fluid
                             selection
-                            options={v.item_variations.map(item => {
+                            options={v.item_variations.map((item) => {
                               return {
                                 key: item.id,
                                 text: item.value,
-                                value: item.id
+                                value: item.id,
                               };
                             })}
                             value={formData[name]}
@@ -186,12 +188,12 @@ class ProductDetail extends React.Component {
             <Grid.Column>
               <Header as="h2">Try different variations</Header>
               {data.variations &&
-                data.variations.map(v => {
+                data.variations.map((v) => {
                   return (
                     <React.Fragment key={v.id}>
                       <Header as="h3">{v.name}</Header>
                       <Item.Group divided>
-                        {v.item_variations.map(iv => {
+                        {v.item_variations.map((iv) => {
                           return (
                             <Item key={iv.id}>
                               {iv.attachment && (
@@ -218,15 +220,10 @@ class ProductDetail extends React.Component {
   }
 }
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    refreshCart: () => dispatch(fetchCart())
+    refreshCart: () => dispatch(fetchCart()),
   };
 };
 
-export default withRouter(
-  connect(
-    null,
-    mapDispatchToProps
-  )(ProductDetail)
-);
+export default withRouter(connect(null, mapDispatchToProps)(ProductDetail));

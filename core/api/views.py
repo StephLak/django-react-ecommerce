@@ -46,6 +46,8 @@ class ItemDetailView(RetrieveAPIView):
 class OrderQuantityUpdateView(APIView):
     def post(self, request, *args, **kwargs):
         slug = request.data.get('slug', None)
+        variations = request.data.get('variations', [])
+
         if slug is None:
             return Response({"message": "Invalid data"}, status=HTTP_400_BAD_REQUEST)
         item = get_object_or_404(Item, slug=slug)
@@ -56,15 +58,25 @@ class OrderQuantityUpdateView(APIView):
         if order_qs.exists():
             order = order_qs[0]
             # check if the order item is in the order
-            if order.items.filter(item__slug=item.slug).exists():
-                order_item = OrderItem.objects.filter(
-                    item=item,
-                    user=request.user,
-                    ordered=False
-                )[0]
+            order_item_qs = OrderItem.objects.filter(
+                item=item,
+                user=request.user,
+                ordered=False
+            )
+
+            for v in variations:
+                order_item_qs = order_item_qs.filter(
+                    Q(item_variations__exact=v)
+                )
+            if order_item_qs.exists():
+                order_item = order_item_qs.first()
                 if order_item.quantity > 1:
                     order_item.quantity -= 1
                     order_item.save()
+
+        # if order_item.quantity > 1:
+        #     order_item.quantity -= 1
+        #     order_item.save()
                 else:
                     order.items.remove(order_item)
                 return Response(status=HTTP_200_OK)
@@ -173,7 +185,7 @@ class PaymentView(APIView):
 
         try:
 
-                # charge the customer because we cannot charge the token more than once
+            # charge the customer because we cannot charge the token more than once
             charge = stripe.Charge.create(
                 amount=amount,  # cents
                 currency="usd",

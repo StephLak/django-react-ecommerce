@@ -10,7 +10,7 @@ import {
   Table,
   Button,
   Message,
-  Segment
+  Segment,
 } from "semantic-ui-react";
 import { connect } from "react-redux";
 import { Link, Redirect } from "react-router-dom";
@@ -19,14 +19,15 @@ import {
   addToCartURL,
   orderSummaryURL,
   orderItemDeleteURL,
-  orderItemUpdateQuantityURL
+  orderItemUpdateQuantityURL,
 } from "../constants";
+import { fetchCart } from "../store/actions/cart";
 
 class OrderSummary extends React.Component {
   state = {
     data: null,
     error: null,
-    loading: false
+    loading: false,
   };
 
   componentDidMount() {
@@ -37,14 +38,14 @@ class OrderSummary extends React.Component {
     this.setState({ loading: true });
     authAxios
       .get(orderSummaryURL)
-      .then(res => {
+      .then((res) => {
         this.setState({ data: res.data, loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.response.status === 404) {
           this.setState({
             error: "You currently do not have an order",
-            loading: false
+            loading: false,
           });
         } else {
           this.setState({ error: err, loading: false });
@@ -52,17 +53,17 @@ class OrderSummary extends React.Component {
       });
   };
 
-  renderVariations = orderItem => {
+  renderVariations = (orderItem) => {
     let text = "";
-    orderItem.item_variations.forEach(iv => {
+    orderItem.item_variations.forEach((iv) => {
       text += `${iv.variation.name}: ${iv.value}, `;
     });
     return text;
   };
 
-  handleFormatData = itemVariations => {
+  handleFormatData = (itemVariations) => {
     // convert [{id: 1},{id: 2}] to [1,2] - they're all variations
-    return Object.keys(itemVariations).map(key => {
+    return Object.keys(itemVariations).map((key) => {
       return itemVariations[key].id;
     });
   };
@@ -72,33 +73,38 @@ class OrderSummary extends React.Component {
     const variations = this.handleFormatData(itemVariations);
     authAxios
       .post(addToCartURL, { slug, variations })
-      .then(res => {
+      .then((res) => {
         this.handleFetchOrder();
+        this.props.refreshCart();
         this.setState({ loading: false });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err, loading: false });
       });
   };
 
-  handleRemoveQuantityFromCart = slug => {
+  handleRemoveQuantityFromCart = (slug, itemVariations) => {
+    this.setState({ loading: true });
+    const variations = this.handleFormatData(itemVariations);
     authAxios
-      .post(orderItemUpdateQuantityURL, { slug })
-      .then(res => {
+      .post(orderItemUpdateQuantityURL, { slug, variations })
+      .then((res) => {
         this.handleFetchOrder();
+        this.props.refreshCart();
+        this.setState({ loading: false });
       })
-      .catch(err => {
-        this.setState({ error: err });
+      .catch((err) => {
+        this.setState({ error: err, loading: false });
       });
   };
 
-  handleRemoveItem = itemID => {
+  handleRemoveItem = (itemID) => {
     authAxios
       .delete(orderItemDeleteURL(itemID))
-      .then(res => {
+      .then((res) => {
         this.handleFetchOrder();
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({ error: err });
       });
   };
@@ -157,7 +163,10 @@ class OrderSummary extends React.Component {
                         name="minus"
                         style={{ float: "left", cursor: "pointer" }}
                         onClick={() =>
-                          this.handleRemoveQuantityFromCart(orderItem.item.slug)
+                          this.handleRemoveQuantityFromCart(
+                            orderItem.item.slug,
+                            orderItem.item_variations
+                          )
                         }
                       />
                       {orderItem.quantity}
@@ -217,10 +226,15 @@ class OrderSummary extends React.Component {
   }
 }
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
-    isAuthenticated: state.auth.token !== null
+    isAuthenticated: state.auth.token !== null,
   };
 };
 
-export default connect(mapStateToProps)(OrderSummary);
+const mapDispatchToProps = (dispatch) => {
+  return {
+    refreshCart: () => dispatch(fetchCart()),
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(OrderSummary);
